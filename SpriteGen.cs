@@ -2,6 +2,9 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
+/// <summary>
+/// This class generates new sprites based on a given set of parameters.
+/// </summary>
 public class SpriteGen : Node2D
 {
 	// Define the character as a collection of shapes, then draw the shapes.
@@ -10,17 +13,24 @@ public class SpriteGen : Node2D
     // Figuring out a way to make the character have an outline would be great. Maybe define a collection of Vector2 arrays with the shapes in them,
     //      then make outlines of them?
 
+    /// <summary> The overall size of the sprite. </summary>
 	private int size = 64;
 
+    /// <summary> A list of Vector2 arrays that define the points of each shape.<br/>
+    /// Each individual Vector2 array represents a single unique shape. </summary>
     private List<Vector2[]> shapes;
 
+    /// <summary> Used to randomly generate shapes and colors. </summary>
     private RandomNumberGenerator random;
 
-    [Export]
-    private Dictionary<string, float> parameters;
+    /// <summary> Stores each of the parameters that can be used by the generator.<br/>
+    /// Each value is associated with a string key. </summary>
+    [Export] private Dictionary<string, float> parameters;
 
+    /// <summary> The seed a limb of the sprite.<br/>These seeds are randomized each time a new sprite is generated. </summary>
     private ulong legSeed, torsoSeed, armSeed, headSeed;
 
+    /// <summary> </summary>
     private Color[] palette;
 
 	// Called when the node enters the scene tree for the first time.
@@ -42,8 +52,6 @@ public class SpriteGen : Node2D
 	}
 
 	public override void _Draw() {
-        
-
         // // We want to start with big shapes and then continue to shrink down the shape size as we continue.
         // float totalShapes = 10;
         // for(float i = 0; i < totalShapes; i++) {
@@ -62,25 +70,33 @@ public class SpriteGen : Node2D
         //     DrawShape(vertices, center, radiusMin, radiusMax, color);
         // }
 
-        File colors = new Godot.File();
-        colors.Open("res://Palettes/bot16.gpl", File.ModeFlags.Read);
-        // Skip the first three lines of text, to skip the palette description.
+        File colors = new Godot.File(); // Create a file object to store the colors that are from the palette file.
+        // TODO make it so that the palette file can be modified during runtime as opposed to being hardcoded.
+        // TODO remove this from the _Draw method so that the file isn't reloaded every time a draw operation is made.
+        colors.Open("res://Palettes/bot16.gpl", File.ModeFlags.Read); // Load a palette file.
+        // Skip the first four lines of text, to skip the palette description.
         colors.GetLine();
         colors.GetLine();
         colors.GetLine();
         colors.GetLine();
+        // Make a list that stores each of the hexadecimal color codes in the file.
         List<String> colorCodes = new List<string>();
 
+        // Loop through the palette file, grabbing each of the hex color codes on each line.
         while(true) {
             string nextLine = colors.GetLine();
-            if(nextLine == "") break;
-            //GD.Print(nextLine.Split(new string[] {"\t"}, StringSplitOptions.None)[3]);
+            if(nextLine == "") break; // If we grabbed an empty line, we reached the end of the file and should exit immediately.
+
+            // The hex color code is the fourth entry on each line, with each item being separated by tabs.
+            // Grab the hex code and then add it to the color code list.
             colorCodes.Add(nextLine.Split(new string[] {"\t"}, StringSplitOptions.None)[3]);
         }
 
-        colors.Close();
+        colors.Close(); // Close the palette file to prevent memory leaks.
 
-        palette = new Color[4];
+        // TODO make it so the amount of colors can be modified during runtime.
+        palette = new Color[4]; // Stores each of the colors that the generated sprite can use.
+        // Randomly pick a color from the color list for each slot of the palette array.
         for(int i = 0; i < palette.Length; i++) {
             palette[i] = new Color(colorCodes[random.RandiRange(0, colorCodes.Count - 1)]);
         }
