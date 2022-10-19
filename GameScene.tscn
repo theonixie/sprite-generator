@@ -1,0 +1,210 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://SpriteGen.cs" type="Script" id=1]
+
+[node name="GameScene" type="Node"]
+
+[node name="SpriteGen" type="Node2D" parent="."]
+position = Vector2( 128, 128 )
+script = ExtResource( 1 )
+parameters = {
+"t_heightMax": 24.0,
+"t_heightMin": -24.0,
+"t_radMax": 32.0,
+"t_radMin": 8.0,
+"t_shapeNum": 16.0,
+"t_width": -18.0
+}
+
+[node name="Menus" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Button" type="Button" parent="Menus"]
+margin_left = 101.0
+margin_top = 237.0
+margin_right = 152.0
+margin_bottom = 257.0
+text = "Again!"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Menus"]
+anchor_left = 0.8
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -16.0
+
+[node name="TORSO_VARIABLES" type="Node" parent="Menus/VBoxContainer"]
+
+[node name="t_shapeLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_right = 220.0
+margin_bottom = 14.0
+text = "Torso: # Shapes"
+
+[node name="torso_shapeNum" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 18.0
+margin_right = 220.0
+margin_bottom = 34.0
+max_value = 64.0
+value = 16.0
+
+[node name="t_radMinLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 38.0
+margin_right = 220.0
+margin_bottom = 52.0
+text = "Torso: Radius Min"
+
+[node name="torso_radMin" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 56.0
+margin_right = 220.0
+margin_bottom = 72.0
+max_value = 64.0
+value = 8.0
+
+[node name="t_radMaxLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 76.0
+margin_right = 220.0
+margin_bottom = 90.0
+text = "Torso: Radius Max"
+
+[node name="torso_radMax" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 94.0
+margin_right = 220.0
+margin_bottom = 110.0
+max_value = 64.0
+value = 32.0
+
+[node name="t_widthLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 114.0
+margin_right = 220.0
+margin_bottom = 128.0
+text = "Torso: X Width"
+
+[node name="torso_width" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 132.0
+margin_right = 220.0
+margin_bottom = 148.0
+min_value = -32.0
+max_value = 0.0
+value = -18.0
+
+[node name="t_heightMinLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 152.0
+margin_right = 220.0
+margin_bottom = 166.0
+text = "Torso: Y Min"
+
+[node name="torso_heightMin" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 170.0
+margin_right = 220.0
+margin_bottom = 186.0
+min_value = -32.0
+max_value = 32.0
+value = -24.0
+
+[node name="t_heightMaxLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 190.0
+margin_right = 220.0
+margin_bottom = 204.0
+text = "Torso: Y Max"
+
+[node name="torso_heightMax" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 208.0
+margin_right = 220.0
+margin_bottom = 224.0
+min_value = -32.0
+max_value = 32.0
+value = 24.0
+
+[node name="ARM_VARIABLES" type="Node" parent="Menus/VBoxContainer"]
+
+[node name="a_shapeLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 228.0
+margin_right = 220.0
+margin_bottom = 242.0
+text = "Arms: # Shapes"
+
+[node name="arms_shapeNum" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 246.0
+margin_right = 220.0
+margin_bottom = 262.0
+max_value = 64.0
+
+[node name="a_radMinLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 266.0
+margin_right = 220.0
+margin_bottom = 280.0
+text = "Arms: Radius Min"
+
+[node name="arms_radMin" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 284.0
+margin_right = 220.0
+margin_bottom = 300.0
+max_value = 64.0
+
+[node name="a_radMaxLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 304.0
+margin_right = 220.0
+margin_bottom = 318.0
+text = "Arms: Radius Max"
+
+[node name="arms_radMax" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 322.0
+margin_right = 220.0
+margin_bottom = 338.0
+max_value = 64.0
+
+[node name="a_widthMinLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 342.0
+margin_right = 220.0
+margin_bottom = 356.0
+text = "Arms: X Min"
+
+[node name="arms_widthMin" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 360.0
+margin_right = 220.0
+margin_bottom = 376.0
+max_value = 64.0
+
+[node name="a_widthMaxLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 380.0
+margin_right = 220.0
+margin_bottom = 394.0
+text = "Arms: X Max"
+
+[node name="arms_widthMax" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 398.0
+margin_right = 220.0
+margin_bottom = 414.0
+max_value = 64.0
+
+[node name="a_heightMinLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 418.0
+margin_right = 220.0
+margin_bottom = 432.0
+text = "Arms: Y Min"
+
+[node name="arms_heightMin" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 436.0
+margin_right = 220.0
+margin_bottom = 452.0
+max_value = 64.0
+
+[node name="a_heightMaxLabel" type="Label" parent="Menus/VBoxContainer"]
+margin_top = 456.0
+margin_right = 220.0
+margin_bottom = 470.0
+text = "Arms: Y Max"
+
+[node name="arms_heightMax" type="HSlider" parent="Menus/VBoxContainer"]
+margin_top = 474.0
+margin_right = 220.0
+margin_bottom = 490.0
+max_value = 64.0
+
+[connection signal="pressed" from="Menus/Button" to="SpriteGen" method="DrawNewSprite"]
+[connection signal="value_changed" from="Menus/VBoxContainer/torso_shapeNum" to="SpriteGen" method="ChangeParameter" binds= [ "t_shapeNum" ]]
+[connection signal="value_changed" from="Menus/VBoxContainer/torso_radMin" to="SpriteGen" method="ChangeParameter" binds= [ "t_radMin" ]]
+[connection signal="value_changed" from="Menus/VBoxContainer/torso_radMax" to="SpriteGen" method="ChangeParameter" binds= [ "t_radMax" ]]
+[connection signal="value_changed" from="Menus/VBoxContainer/torso_width" to="SpriteGen" method="ChangeParameter" binds= [ "t_width" ]]
+[connection signal="value_changed" from="Menus/VBoxContainer/torso_heightMin" to="SpriteGen" method="ChangeParameter" binds= [ "t_heightMin" ]]
+[connection signal="value_changed" from="Menus/VBoxContainer/torso_heightMax" to="SpriteGen" method="ChangeParameter" binds= [ "t_heightMax" ]]
