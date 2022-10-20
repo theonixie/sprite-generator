@@ -28,9 +28,11 @@ public class SpriteGen : Node2D
     [Export] private Dictionary<string, float> parameters;
 
     /// <summary> The seed a limb of the sprite.<br/>These seeds are randomized each time a new sprite is generated. </summary>
-    private ulong legSeed, torsoSeed, armSeed, headSeed;
+    private ulong colorSeed, legSeed, torsoSeed, armSeed, headSeed;
 
-    /// <summary> </summary>
+    /// <summary> The list of hexadecimal color codes loaded from a GPL file. </summary>
+    private List<String> colorCodes;
+    /// <summary> The palette of colors used for this sprite. </summary>
     private Color[] palette;
 
 	// Called when the node enters the scene tree for the first time.
@@ -44,11 +46,13 @@ public class SpriteGen : Node2D
 		shapes = new List<Vector2[]>();
         random = new RandomNumberGenerator();
         //random.Seed = 204603460;
+        colorSeed = 200;
         legSeed = 300;
         torsoSeed = 600;
         armSeed = 900;
         headSeed = 1200;
         //random.Seed = legSeed;
+        LoadColors("res://Palettes/bot16.gpl");
 	}
 
 	public override void _Draw() {
@@ -70,31 +74,13 @@ public class SpriteGen : Node2D
         //     DrawShape(vertices, center, radiusMin, radiusMax, color);
         // }
 
-        File colors = new Godot.File(); // Create a file object to store the colors that are from the palette file.
-        // TODO make it so that the palette file can be modified during runtime as opposed to being hardcoded.
-        // TODO remove this from the _Draw method so that the file isn't reloaded every time a draw operation is made.
-        colors.Open("res://Palettes/bot16.gpl", File.ModeFlags.Read); // Load a palette file.
-        // Skip the first four lines of text, to skip the palette description.
-        colors.GetLine();
-        colors.GetLine();
-        colors.GetLine();
-        colors.GetLine();
-        // Make a list that stores each of the hexadecimal color codes in the file.
-        List<String> colorCodes = new List<string>();
-
-        // Loop through the palette file, grabbing each of the hex color codes on each line.
-        while(true) {
-            string nextLine = colors.GetLine();
-            if(nextLine == "") break; // If we grabbed an empty line, we reached the end of the file and should exit immediately.
-
-            // The hex color code is the fourth entry on each line, with each item being separated by tabs.
-            // Grab the hex code and then add it to the color code list.
-            colorCodes.Add(nextLine.Split(new string[] {"\t"}, StringSplitOptions.None)[3]);
-        }
-
-        colors.Close(); // Close the palette file to prevent memory leaks.
-
-        // TODO make it so the amount of colors can be modified during runtime.
+        /**
+         * TODO: Ideas for how to make the sprite generator support animation:
+         * We already generate the individual shapes as groups, but the data doesn't *memorize* those groups.
+         * If we can keep them in their separate categories, we should be able to animate and tweak them individually.
+         */
+        random.Seed = colorSeed;
+        // TODO: make it so the amount of colors can be modified during runtime.
         palette = new Color[4]; // Stores each of the colors that the generated sprite can use.
         // Randomly pick a color from the color list for each slot of the palette array.
         for(int i = 0; i < palette.Length; i++) {
@@ -104,19 +90,18 @@ public class SpriteGen : Node2D
 		// Start big, then progressively go smaller. Or maybe not?
 
         // Start with Legs.
-        random.Seed = legSeed;
-		float totalShapes = 8f;
-		for(float i = 0; i < totalShapes; i++) {
-			int vertices = random.RandiRange(3, 6);
-			float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-            float randOffset = random.RandfRange(Mathf.Lerp(0f, 4f, i / totalShapes), Mathf.Lerp(3f, 10f, i / totalShapes));
-
-			float lerpVal = i / totalShapes;
-			float radiusMin = random.RandfRange(8f, 16f);
+        random.Seed = legSeed; // Set the randomizer's seed to the seed for this limb.
+        // TODO: make totalShapes a parameter in the dictionary.
+		float totalShapes = 8f; // This is how many shapes we want to generate for this limb.
+		for(float i = 0; i < totalShapes; i++) { // Generate one shape for each of the total shapes. Each new shape overlaps the previous.
+			int vertices = random.RandiRange(3, 6); // Randomly determine how many vertices this shape has.
+			float randAngle = random.RandfRange(0, Mathf.Pi * 2); // Randomly determine the angle of this shape.
+            // TODO: Add dict parameters for radii.
+			float radiusMin = random.RandfRange(8f, 16f); // Randomly determine the smallest possible radius for this shape.
 			float radiusMax = random.RandfRange(18f, 28f);
-			Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]);
-			Vector2 center = new Vector2(random.RandfRange(-24f, -8f), random.RandfRange(12f, 48f));
-            DrawShape(vertices, center, radiusMin, radiusMax, color);
+			Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]); // Randomly pick a color for this shape from the palette.
+			Vector2 center = new Vector2(random.RandfRange(-24f, -8f), random.RandfRange(12f, 48f)); // Randomly set a center.
+            DrawShape(vertices, center, radiusMin, radiusMax, color); // Use the DrawShape function to generate the shape.
             //CreateShape(vertices, center, radiusMin, radiusMax, color);
 
 		}
@@ -126,9 +111,6 @@ public class SpriteGen : Node2D
 		for(float i = 0; i < totalShapes; i++) {
 			int vertices = random.RandiRange(3, 6);
 			float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-            float randOffset = random.RandfRange(Mathf.Lerp(0f, 4f, i / totalShapes), Mathf.Lerp(3f, 10f, i / totalShapes));
-
-			float lerpVal = i / totalShapes;
 			float radiusMin = parameters["t_radMin"];
 			float radiusMax = parameters["t_radMax"];
 			Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]);
@@ -143,9 +125,6 @@ public class SpriteGen : Node2D
 		for(float i = 0; i < totalShapes; i++) {
 			int vertices = random.RandiRange(3, 6);
 			float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-            float randOffset = random.RandfRange(Mathf.Lerp(0f, 4f, i / totalShapes), Mathf.Lerp(3f, 10f, i / totalShapes));
-
-			float lerpVal = i / totalShapes;
 			float radiusMin = 12f; // REPLACE WITH DICTIONARY VALUE
 			float radiusMax = 24f; // REPLACE WITH DICT VALUE
 			Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]);
@@ -160,9 +139,6 @@ public class SpriteGen : Node2D
 		for(float i = 0; i < totalShapes; i++) {
 			int vertices = random.RandiRange(3, 6);
 			float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-            //float randOffset = random.RandfRange(Mathf.Lerp(0f, 4f, i / totalShapes), Mathf.Lerp(3f, 10f, i / totalShapes));
-
-			//float lerpVal = i / totalShapes;
 			float radiusMin = 8f; // REPLACE WITH DICTIONARY VALUE
 			float radiusMax = 16f; // REPLACE WITH DICT VALUE
 			Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]);
@@ -193,8 +169,39 @@ public class SpriteGen : Node2D
 //      
 //  }
 
+    /// <summary>
+    /// Loads colors from a color file.
+    /// </summary>
+    /// <param name="filePath">The path leading to the color palette to load.</param>
+    private void LoadColors(string filePath) {
+        File colors = new Godot.File(); // Create a file object to store the colors that are from the palette file.
+        colors.Open(filePath, File.ModeFlags.Read); // Load a palette file.
+        // Skip the first four lines of text, to skip the palette description.
+        colors.GetLine();
+        colors.GetLine();
+        colors.GetLine();
+        colors.GetLine();
+        // Make a list that stores each of the hexadecimal color codes in the file.
+        colorCodes = new List<string>();
+
+        // Loop through the palette file, grabbing each of the hex color codes on each line.
+        while(true) {
+            string nextLine = colors.GetLine();
+            if(nextLine == "") break; // If we grabbed an empty line, we reached the end of the file and should exit immediately.
+            // The hex color code is the fourth entry on each line, with each item being separated by tabs.
+            // Grab the hex code and then add it to the color code list.
+            colorCodes.Add(nextLine.Split(new string[] {"\t"}, StringSplitOptions.None)[3]);
+        }
+
+        colors.Close(); // Close the palette file to prevent memory leaks.
+    }
+
+    /// <summary>
+    /// Randomizes all shape parameters and then prompts the renderer update.
+    /// </summary>
 	public void DrawNewSprite() {
         random.Randomize();
+        colorSeed = (ulong)random.RandiRange(0, int.MaxValue);
         legSeed = (ulong)random.RandiRange(0, int.MaxValue);
         torsoSeed = (ulong)random.RandiRange(0, int.MaxValue);
         armSeed = (ulong)random.RandiRange(0, int.MaxValue);
@@ -202,22 +209,30 @@ public class SpriteGen : Node2D
 		Update();
 	}
 
+    /// <summary>
+    /// Creates a randomized shape based on provided parameters.
+    /// </summary>
+    /// <param name="vertexCount">How many points make up this shape.</param>
+    /// <param name="center">The center of this shape in 2D space.</param>
+    /// <param name="radiusMin">The smallest distance a point can be from the shape's center.</param>
+    /// <param name="radiusMax">The largest distance a point can be from the shape's center.</param>
+    /// <param name="color">The color of this shape.</param>
 	public void DrawShape(int vertexCount, Vector2 center, float radiusMin, float radiusMax, Color color) {
-        //RandomNumberGenerator random = new RandomNumberGenerator();
-        //random.Randomize();
-        // Vector2[] points = new Vector2[4];
-        // points[0] = new Vector2(10, 10) + center;
-        // points[1] = new Vector2(-10, 10) + center;
-        // points[2] = new Vector2(-10, -10) + center;
-        // points[3] = new Vector2(10, -10) + center;
-        Vector2[] points = new Vector2[vertexCount];
-		Vector2[] mirrorPoints = new Vector2[vertexCount];
+        Vector2[] points = new Vector2[vertexCount]; // The points of this shape.
+		Vector2[] mirrorPoints = new Vector2[vertexCount]; // The reflected version of this shape on the opposite side.
+        Vector2[] sidePoints = new Vector2[vertexCount]; // The side profile of this shape.
         for(int i = 0; i < vertexCount; i++) {
             float angle = random.RandfRange(0, (1.0f / vertexCount) * Mathf.Pi * 2f);
             float radius = random.RandfRange(radiusMin, radiusMax);
             points[i].x = (radius * Mathf.Cos((((float)i / vertexCount) * Mathf.Pi * 2f) + angle)) + center.x;
+            sidePoints[i].x = points[i].x + 160f - (center.x / 2f); // Add the side view off to the side, before doing the mirror effect.
+            // If the side points is past the "center" of the sprite, divide it's distance by half.
+            // Helps emulate having an actual curve to the body so it's not a direct clone of the front view.
+            if(sidePoints[i].x > 160f) sidePoints[i].x -= (sidePoints[i].x - 160) / 2f;
 			points[i].x = Mathf.Clamp(points[i].x, -64f, 0f);
+            //sidePoints[i].x = Mathf.Clamp(sidePoints[i].x, 0f, 165f);
             points[i].y = (radius * Mathf.Sin((((float)i / vertexCount) * Mathf.Pi * 2f) + angle)) + center.y;
+            sidePoints[i].y = points[i].y;
 
 			// Now make the mirrored version of this shape.
 			mirrorPoints[i].x = -points[i].x;
@@ -229,6 +244,7 @@ public class SpriteGen : Node2D
 
         DrawPolygon(points, colors);
 		DrawPolygon(mirrorPoints, colors);
+        DrawPolygon(sidePoints, colors);
         // Rect2 position = new Rect2(new Vector2(8, 0), new Vector2(8, 16));
         // Rect2 sourcePosition = new Rect2(Vector2.Zero, new Vector2(8, 16));
         // await ToSignal(GetTree(), "idle_frame");
@@ -273,6 +289,11 @@ public class SpriteGen : Node2D
         
     }
 
+    /// <summary>
+    /// Changes the value of a specific parameter in the dictionary and then forces the renderer to redraw the frame.
+    /// </summary>
+    /// <param name="newValue">The new value this parameter should have.</param>
+    /// <param name="paramName">The name of the parameter to change in the dictionary.</param>
     public void ChangeParameter(float newValue, string paramName) {
         parameters[paramName] = newValue;
         Update();
