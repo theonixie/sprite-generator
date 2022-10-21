@@ -38,6 +38,15 @@ public class SpriteGen : Node2D
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+        parameters = new Dictionary<string, float>();
+        parameters.Add("colors", 4f); // Total colors on the sprite.
+        parameters.Add("t_heightMin", -24);
+        parameters.Add("t_heightMax", 24);
+        parameters.Add("t_radMax", 32f);
+        parameters.Add("t_radMin", 8);
+        parameters.Add("t_shapeNum", 16f);
+        parameters.Add("t_width", -18);
+
         palette = new Color[4];
         palette[0] = new Color(1,1,1);
         palette[1] = new Color(0, 1, 1);
@@ -52,7 +61,8 @@ public class SpriteGen : Node2D
         armSeed = 900;
         headSeed = 1200;
         //random.Seed = legSeed;
-        LoadColors("res://Palettes/bot16.gpl");
+        //LoadColors("res://Palettes/jewel-tone-appalachia28.gpl");
+        LoadColors("res://Palettes/tilde.gpl");
 	}
 
 	public override void _Draw() {
@@ -81,7 +91,7 @@ public class SpriteGen : Node2D
          */
         random.Seed = colorSeed;
         // TODO: make it so the amount of colors can be modified during runtime.
-        palette = new Color[4]; // Stores each of the colors that the generated sprite can use.
+        palette = new Color[(int)parameters["colors"]]; // Stores each of the colors that the generated sprite can use.
         // Randomly pick a color from the color list for each slot of the palette array.
         for(int i = 0; i < palette.Length; i++) {
             palette[i] = new Color(colorCodes[random.RandiRange(0, colorCodes.Count - 1)]);
