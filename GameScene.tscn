@@ -13,10 +13,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="Button" type="Button" parent="Menus"]
-margin_left = 101.0
-margin_top = 237.0
-margin_right = 152.0
-margin_bottom = 257.0
+margin_left = 13.0
+margin_top = 566.0
+margin_right = 64.0
+margin_bottom = 586.0
 text = "Again!"
 
 [node name="ParamList" type="VBoxContainer" parent="Menus"]
