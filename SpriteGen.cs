@@ -15,24 +15,20 @@ public class SpriteGen : Node2D
 
     private struct LimbGroup {
         public ulong seed;
-        /// <summary> How many shapes are part of this limb group.</summary>
-        public float totalShapes;
-        /// <summary> The smallest and largest radius a shape can have in this group.</summary>
-        public float radMin, radMax;
-        /// <summary> The left and right limits of where this limb group can be.</summary>
-        public float xMin, xMax;
-        /// <summary> The up and down limits of where this limb group can be.</summary>
-        public float yMin, yMax;
+
+        public Dictionary<string, float> parameters;
 
         public LimbGroup(ulong s, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa) {
+            parameters = new Dictionary<string, float>();
+            
             seed = s;
-            totalShapes = ts;
-            radMin = rMin;
-            radMax = rMax;
-            xMin = xMi;
-            xMax = xMa;
-            yMin = yMi;
-            yMax = yMa;
+            parameters.Add("totalShapes", ts);
+            parameters.Add("radMin", rMin);
+            parameters.Add("radMax", rMax);
+            parameters.Add("xMin", xMi);
+            parameters.Add("xMax", xMa);
+            parameters.Add("yMin", yMi);
+            parameters.Add("yMax", yMa);
         }
     }
 
@@ -60,6 +56,8 @@ public class SpriteGen : Node2D
     /// <summary> The palette of colors used for this sprite. </summary>
     private Color[] palette;
 
+    private Node menuListNode;
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -72,11 +70,19 @@ public class SpriteGen : Node2D
         // parameters.Add("t_shapeNum", 16f);
         // parameters.Add("t_width", -18);
 
+        // We add menu panels to this object whenever we create a limb group.
+        menuListNode = GetNode<Node>("UI/Menus/ScrollPanel/ParamList");
+
         values = new Dictionary<string, LimbGroup>();
-        values.Add("legs", new LimbGroup(300, 8, 12, 24, -24, -8, 12, 48));
+        values.Add("legs", new LimbGroup(300, 8, 12, 24, -24, -8, 24, 48));
         values.Add("torso", new LimbGroup(600, 16, 8, 32, -18, 0, -24, 24));
         values.Add("arms", new LimbGroup(900, 8, 12, 24, -64, -24, -24, 24));
         values.Add("head", new LimbGroup(1200, 8, 8, 16, -24, 0, -28, -40));
+
+        CreateLimbEditorPanel("torso");
+        CreateLimbEditorPanel("head");
+        CreateLimbEditorPanel("arms");
+        CreateLimbEditorPanel("legs");
 
         palette = new Color[4];
         palette[0] = new Color(1,1,1);
@@ -140,12 +146,12 @@ public class SpriteGen : Node2D
             }
 
             foreach(KeyValuePair<string, LimbGroup> group in values) {
-                for(float i = 0; i < group.Value.totalShapes; i++) {
+                for(float i = 0; i < group.Value.parameters["totalShapes"]; i++) {
                     int vertices = random.RandiRange(3, 6); // Randomly determine how many vertices this shape has.
                     Color color  = new Color(palette[random.RandiRange(0, palette.Length - 1)]); // Randomly pick a color for this shape from the palette.
-                    Vector2 center = new Vector2(random.RandfRange(group.Value.xMin, group.Value.xMax), random.RandfRange(group.Value.yMin, group.Value.yMax) + (k * 128f));
+                    Vector2 center = new Vector2(random.RandfRange(group.Value.parameters["xMin"], group.Value.parameters["xMax"]), random.RandfRange(group.Value.parameters["yMin"], group.Value.parameters["yMax"]) + (k * 128f));
 
-                    DrawShape(vertices, center, group.Value.radMin, group.Value.radMax, color); // Use the DrawShape function to generate the shape.
+                    DrawShape(vertices, center, group.Value.parameters["radMin"], group.Value.parameters["radMax"], color); // Use the DrawShape function to generate the shape.
                 }
             }
         }
@@ -317,7 +323,7 @@ public class SpriteGen : Node2D
 
         DrawPolygon(points, colors);
 		DrawPolygon(mirrorPoints, colors);
-        DrawPolygon(sidePoints, colors);
+        //DrawPolygon(sidePoints, colors);
         // Rect2 position = new Rect2(new Vector2(8, 0), new Vector2(8, 16));
         // Rect2 sourcePosition = new Rect2(Vector2.Zero, new Vector2(8, 16));
         // await ToSignal(GetTree(), "idle_frame");
@@ -370,5 +376,23 @@ public class SpriteGen : Node2D
     public void ChangeParameter(float newValue, string paramName) {
         parameters[paramName] = newValue;
         Update();
+    }
+
+    public void ChangeParameter(float newValue, string groupName, string paramName) {
+        values[groupName].parameters[paramName] = newValue;
+        Update();
+    }
+
+    /// <summary>
+    /// Creates a new category in the limb editor panel for this limb group.
+    /// </summary>
+    /// <param name="groupName">The name of the group we are making an editor for.</param>
+    public void CreateLimbEditorPanel(string groupName) {
+        var menuPrefab = GD.Load<PackedScene>("res://Scenes/LimbEditor.tscn");
+        var menuInstance = menuPrefab.Instance();
+        menuListNode.AddChild(menuInstance);
+        menuInstance.GetNode<Label>("LimbName").Text = groupName;
+
+        menuInstance.GetNode<HSlider>("ShapeNum").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "totalShapes"});
     }
 }

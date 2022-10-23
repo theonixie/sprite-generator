@@ -11,7 +11,7 @@ config_version=4
 [application]
 
 config/name="SpriteGenerator"
-run/main_scene="res://GameScene.tscn"
+run/main_scene="res://Scenes/GameScene.tscn"
 config/icon="res://icon.png"
 
 [gui]
