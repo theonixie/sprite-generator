@@ -14,14 +14,14 @@ public class SpriteGen : Node2D
     //      then make outlines of them?
 
     private struct LimbGroup {
-        public ulong seed;
+        public ulong[] seeds;
 
         public Dictionary<string, float> parameters;
 
-        public LimbGroup(ulong s, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa) {
+        public LimbGroup(int seedCount, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa) {
             parameters = new Dictionary<string, float>();
             
-            seed = s;
+            seeds = new ulong[seedCount];
             parameters.Add("totalShapes", ts);
             parameters.Add("radMin", rMin);
             parameters.Add("radMax", rMax);
@@ -34,6 +34,9 @@ public class SpriteGen : Node2D
 
     /// <summary> The overall size of the sprite. </summary>
 	private int size = 64;
+
+    /// <summary> How many sprites to generate. MUST BE A NUMBER THAT CAN BE SQUARE-ROOTED. </summary>
+    private int totalSprites = 16;
 
     /// <summary> A list of Vector2 arrays that define the points of each shape.<br/>
     /// Each individual Vector2 array represents a single unique shape. </summary>
@@ -50,6 +53,8 @@ public class SpriteGen : Node2D
 
     /// <summary> The seed a limb of the sprite.<br/>These seeds are randomized each time a new sprite is generated. </summary>
     private ulong colorSeed, legSeed, torsoSeed, armSeed, headSeed;
+
+    private ulong[] colorSeeds;
 
     /// <summary> The list of hexadecimal color codes loaded from a GPL file. </summary>
     private List<String> colorCodes;
@@ -74,11 +79,10 @@ public class SpriteGen : Node2D
         menuListNode = GetNode<Node>("UI/Menus/ScrollPanel/ParamList");
 
         values = new Dictionary<string, LimbGroup>();
-        values.Add("legs", new LimbGroup(300, 8, 12, 24, -24, -8, 24, 48));
-        values.Add("torso", new LimbGroup(600, 16, 8, 32, -18, 0, -24, 24));
-        values.Add("arms", new LimbGroup(900, 8, 12, 24, -64, -24, -24, 24));
-        values.Add("head", new LimbGroup(1200, 8, 8, 16, -24, 0, -28, -40));
-
+        values.Add("legs", new LimbGroup(totalSprites, 8, 12, 24, -24, -8, 24, 48));
+        values.Add("torso", new LimbGroup(totalSprites, 16, 8, 32, -18, 0, -24, 24));
+        values.Add("arms", new LimbGroup(totalSprites, 8, 12, 24, -64, -24, -24, 24));
+        values.Add("head", new LimbGroup(totalSprites, 8, 8, 16, -24, 0, -28, -40));
         CreateLimbEditorPanel("torso");
         CreateLimbEditorPanel("head");
         CreateLimbEditorPanel("arms");
@@ -97,6 +101,21 @@ public class SpriteGen : Node2D
         torsoSeed = 600;
         armSeed = 900;
         headSeed = 1200;
+
+        // This loop randomizes the seeds for every sprite that is to be generated.
+        for(int k = 0; k < totalSprites; k++) {
+            foreach(KeyValuePair<string, LimbGroup> group in values) {
+                group.Value.seeds[k] = (ulong)random.RandiRange(0, int.MaxValue); // Set the seed for this sprite to a random value.
+            }
+        }
+
+        colorSeeds = new ulong[totalSprites];
+
+        // Create a random collection of color seeds.
+        for(int i = 0; i < totalSprites; i++) {
+            colorSeeds[i] = (ulong)random.RandiRange(0, int.MaxValue);
+        }
+
         //random.Seed = legSeed;
         //LoadColors("res://Palettes/jewel-tone-appalachia28.gpl");
         LoadColors("res://Palettes/sk-24.gpl");
@@ -135,9 +154,10 @@ public class SpriteGen : Node2D
         }
 
 		// Start big, then progressively go smaller. Or maybe not?
-        
+        int rowWidth = (int)Mathf.Sqrt(totalSprites);
         // Generate each limb group for each individual sprite, then generate the next group, then the next one, then the next one.
-        for(int k = 0; k < 4; k++) {
+        for(int k = 0; k < totalSprites; k++) {
+            random.Seed = colorSeeds[k];
             // TODO: make it so the amount of colors can be modified during runtime.
             palette = new Color[4]; // Stores each of the colors that the generated sprite can use.
             // Randomly pick a color from the color list for each slot of the palette array.
@@ -146,12 +166,13 @@ public class SpriteGen : Node2D
             }
 
             foreach(KeyValuePair<string, LimbGroup> group in values) {
+                random.Seed = group.Value.seeds[k]; // Set the randomizer to this limb group's seed.
                 for(float i = 0; i < group.Value.parameters["totalShapes"]; i++) {
                     int vertices = random.RandiRange(3, 6); // Randomly determine how many vertices this shape has.
                     Color color  = new Color(palette[random.RandiRange(0, palette.Length - 1)]); // Randomly pick a color for this shape from the palette.
-                    Vector2 center = new Vector2(random.RandfRange(group.Value.parameters["xMin"], group.Value.parameters["xMax"]), random.RandfRange(group.Value.parameters["yMin"], group.Value.parameters["yMax"]) + (k * 128f));
-
-                    DrawShape(vertices, center, group.Value.parameters["radMin"], group.Value.parameters["radMax"], color); // Use the DrawShape function to generate the shape.
+                    Vector2 center = new Vector2(random.RandfRange(group.Value.parameters["xMin"], group.Value.parameters["xMax"]), random.RandfRange(group.Value.parameters["yMin"], group.Value.parameters["yMax"]));
+                    center += new Vector2((k % rowWidth) * 128f, (k / rowWidth) * 128f);
+                    DrawShape(vertices, center, (k % rowWidth) * 128f, group.Value.parameters["radMin"], group.Value.parameters["radMax"], color); // Use the DrawShape function to generate the shape.
                 }
             }
         }
@@ -272,19 +293,13 @@ public class SpriteGen : Node2D
         torsoSeed = (ulong)random.RandiRange(0, int.MaxValue);
         armSeed = (ulong)random.RandiRange(0, int.MaxValue);
         headSeed = (ulong)random.RandiRange(0, int.MaxValue);
-		Update();
-	}
 
-    /// <summary>
-    /// Randomizes all shape parameters based on a given seed and then prompts the renderer update.
-    /// </summary>
-	public void DrawNewSprite(ulong randomizerSeed) {
-        random.Seed = randomizerSeed;
-        colorSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        legSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        torsoSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        armSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        headSeed = (ulong)random.RandiRange(0, int.MaxValue);
+        // Randomize the seed for each sprite to be drawn.
+        for(int k = 0; k < totalSprites; k++) {
+            foreach(KeyValuePair<string, LimbGroup> group in values) {
+                group.Value.seeds[k] = (ulong)random.RandiRange(0, int.MaxValue); // Set the seed for this sprite to a random value.
+            }
+        }
 		Update();
 	}
 
@@ -293,10 +308,11 @@ public class SpriteGen : Node2D
     /// </summary>
     /// <param name="vertexCount">How many points make up this shape.</param>
     /// <param name="center">The center of this shape in 2D space.</param>
+    /// <param name="mirrorCenter">Where the x-axis mirror is located.</param>
     /// <param name="radiusMin">The smallest distance a point can be from the shape's center.</param>
     /// <param name="radiusMax">The largest distance a point can be from the shape's center.</param>
     /// <param name="color">The color of this shape.</param>
-	public void DrawShape(int vertexCount, Vector2 center, float radiusMin, float radiusMax, Color color) {
+	public void DrawShape(int vertexCount, Vector2 center, float mirrorCenter, float radiusMin, float radiusMax, Color color) {
         Vector2[] points = new Vector2[vertexCount]; // The points of this shape.
 		Vector2[] mirrorPoints = new Vector2[vertexCount]; // The reflected version of this shape on the opposite side.
         Vector2[] sidePoints = new Vector2[vertexCount]; // The side profile of this shape.
@@ -308,13 +324,13 @@ public class SpriteGen : Node2D
             // If the side points is past the "center" of the sprite, divide it's distance by half.
             // Helps emulate having an actual curve to the body so it's not a direct clone of the front view.
             if(sidePoints[i].x > 160f) sidePoints[i].x -= (sidePoints[i].x - 160) / 2f;
-			points[i].x = Mathf.Clamp(points[i].x, -64f, 0f);
+			points[i].x = Mathf.Clamp(points[i].x, mirrorCenter - 64f, mirrorCenter);
             //sidePoints[i].x = Mathf.Clamp(sidePoints[i].x, 0f, 165f);
             points[i].y = (radius * Mathf.Sin((((float)i / vertexCount) * Mathf.Pi * 2f) + angle)) + center.y;
             sidePoints[i].y = points[i].y;
 
 			// Now make the mirrored version of this shape.
-			mirrorPoints[i].x = -points[i].x;
+			mirrorPoints[i].x = mirrorCenter + ((points[i].x - mirrorCenter) * -1 );
 			mirrorPoints[i].y = points[i].y; 
             //GD.Print(points[i].x + " | " + points[i].y);
         }
@@ -384,7 +400,8 @@ public class SpriteGen : Node2D
     }
 
     /// <summary>
-    /// Creates a new category in the limb editor panel for this limb group.
+    /// Creates a new category in the limb editor panel for this limb group.<br/>
+    /// WARNING: Requires that the LimbEditor.tscn is formatted with specific names.
     /// </summary>
     /// <param name="groupName">The name of the group we are making an editor for.</param>
     public void CreateLimbEditorPanel(string groupName) {
@@ -394,5 +411,11 @@ public class SpriteGen : Node2D
         menuInstance.GetNode<Label>("LimbName").Text = groupName;
 
         menuInstance.GetNode<HSlider>("ShapeNum").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "totalShapes"});
+        menuInstance.GetNode<HSlider>("RadMin").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "radMin"});
+        menuInstance.GetNode<HSlider>("RadMax").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "radMax"});
+        menuInstance.GetNode<HSlider>("xMin").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "xMin"});
+        menuInstance.GetNode<HSlider>("xMax").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "xMax"});
+        menuInstance.GetNode<HSlider>("yMin").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "yMin"});
+        menuInstance.GetNode<HSlider>("yMax").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "yMax"});
     }
 }
