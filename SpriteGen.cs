@@ -37,74 +37,46 @@ public class SpriteGen : Node2D
 
     /// <summary> How many sprites to generate. MUST BE A NUMBER THAT CAN BE SQUARE-ROOTED. </summary>
     private int totalSprites = 16;
-
     /// <summary> A list of Vector2 arrays that define the points of each shape.<br/>
     /// Each individual Vector2 array represents a single unique shape. </summary>
     private List<Vector2[]> shapes;
-
     /// <summary> Used to randomly generate shapes and colors. </summary>
     private RandomNumberGenerator random;
-
-    /// <summary> Stores each of the parameters that can be used by the generator.<br/>
-    /// Each value is associated with a string key. </summary>
-    [Export] public Dictionary<string, float> parameters;
-
-    private Dictionary<string, LimbGroup> values;
-
-    /// <summary> The seed a limb of the sprite.<br/>These seeds are randomized each time a new sprite is generated. </summary>
-    private ulong colorSeed, legSeed, torsoSeed, armSeed, headSeed;
-
+    /// <summary> Contains each of the parameters for each limb group. </summary>
+    private Dictionary<string, LimbGroup> parameters;
+    /// <summary> The randomizer seeds for the colors of each sprite in a batch. </summary>
     private ulong[] colorSeeds;
-
+    /// <summary> How many colors each sprite should have. </summary>
+    private int totalColors = 4;
     /// <summary> The list of hexadecimal color codes loaded from a GPL file. </summary>
     private List<String> colorCodes;
     /// <summary> The palette of colors used for this sprite. </summary>
     private Color[] palette;
-
+    /// <summary> The node containing the parameter list. LimbGroup editors are added to this node.</summary>
     private Node menuListNode;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-        // parameters = new Dictionary<string, float>();
-        // parameters.Add("colors", 4f); // Total colors on the sprite.
-        // parameters.Add("t_heightMin", -24);
-        // parameters.Add("t_heightMax", 24);
-        // parameters.Add("t_radMax", 32f);
-        // parameters.Add("t_radMin", 8);
-        // parameters.Add("t_shapeNum", 16f);
-        // parameters.Add("t_width", -18);
-
         // We add menu panels to this object whenever we create a limb group.
         menuListNode = GetNode<Node>("UI/Menus/ScrollPanel/ParamList");
 
-        values = new Dictionary<string, LimbGroup>();
-        values.Add("legs", new LimbGroup(totalSprites, 8, 12, 24, -24, -8, 24, 48));
-        values.Add("torso", new LimbGroup(totalSprites, 16, 8, 32, -18, 0, -24, 24));
-        values.Add("arms", new LimbGroup(totalSprites, 8, 12, 24, -64, -24, -24, 24));
-        values.Add("head", new LimbGroup(totalSprites, 8, 8, 16, -24, 0, -28, -40));
+        parameters = new Dictionary<string, LimbGroup>();
+        parameters.Add("legs", new LimbGroup(totalSprites, 8, 12, 24, -24, -8, 24, 48));
+        parameters.Add("torso", new LimbGroup(totalSprites, 16, 8, 32, -18, 0, -24, 24));
+        parameters.Add("arms", new LimbGroup(totalSprites, 8, 12, 24, -64, -24, -24, 24));
+        parameters.Add("head", new LimbGroup(totalSprites, 8, 8, 16, -24, 0, -28, -40));
         CreateLimbEditorPanel("torso");
         CreateLimbEditorPanel("head");
         CreateLimbEditorPanel("arms");
         CreateLimbEditorPanel("legs");
 
-        palette = new Color[4];
-        palette[0] = new Color(1,1,1);
-        palette[1] = new Color(0, 1, 1);
-        palette[2] = new Color(0, 0, 1);
-        palette[3] = new Color(0, 0, 0);
 		shapes = new List<Vector2[]>();
         random = new RandomNumberGenerator();
-        //random.Seed = 204603460;
-        colorSeed = 200;
-        legSeed = 300;
-        torsoSeed = 600;
-        armSeed = 900;
-        headSeed = 1200;
 
         // This loop randomizes the seeds for every sprite that is to be generated.
         for(int k = 0; k < totalSprites; k++) {
-            foreach(KeyValuePair<string, LimbGroup> group in values) {
+            foreach(KeyValuePair<string, LimbGroup> group in parameters) {
                 group.Value.seeds[k] = (ulong)random.RandiRange(0, int.MaxValue); // Set the seed for this sprite to a random value.
             }
         }
@@ -116,56 +88,24 @@ public class SpriteGen : Node2D
             colorSeeds[i] = (ulong)random.RandiRange(0, int.MaxValue);
         }
 
-        //random.Seed = legSeed;
         //LoadColors("res://Palettes/jewel-tone-appalachia28.gpl");
         LoadColors("res://Palettes/sk-24.gpl");
 	}
 
 	public override void _Draw() {
-        // // We want to start with big shapes and then continue to shrink down the shape size as we continue.
-        // float totalShapes = 10;
-        // for(float i = 0; i < totalShapes; i++) {
-        //     int vertices = random.RandiRange(3, 8);
-        //     float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-        //     float randOffset = random.RandfRange(Mathf.Lerp(0f, 4f, i / totalShapes), Mathf.Lerp(3f, 10f, i / totalShapes));
-        //     Vector2 center = new Vector2();
-        //     center.x = randOffset * Mathf.Cos(randAngle);
-        //     center.y = randOffset * Mathf.Sin(randAngle);
-        //     //center += new Vector2(50, 50);
-        //     float radiusMin = random.RandfRange(Mathf.Lerp(5f, 2f, i / totalShapes),
-        //                                             Mathf.Lerp(8f, 4f, i / totalShapes));
-        //     float radiusMax = random.RandfRange(Mathf.Lerp(8f, 4f, i / totalShapes),
-        //                                             Mathf.Lerp(10f, 6f, i / totalShapes));
-        //     Color color = new Color(random.Randf(), random.Randf(), random.Randf());
-        //     DrawShape(vertices, center, radiusMin, radiusMax, color);
-        // }
-
-        /**
-         * TODO: Ideas for how to make the sprite generator support animation:
-         * We already generate the individual shapes as groups, but the data doesn't *memorize* those groups.
-         * If we can keep them in their separate categories, we should be able to animate and tweak them individually.
-         */
-        random.Seed = colorSeed;
-        // TODO: make it so the amount of colors can be modified during runtime.
-        palette = new Color[4]; // Stores each of the colors that the generated sprite can use.
-        // Randomly pick a color from the color list for each slot of the palette array.
-        for(int i = 0; i < palette.Length; i++) {
-            palette[i] = new Color(colorCodes[random.RandiRange(0, colorCodes.Count - 1)]);
-        }
-
 		// Start big, then progressively go smaller. Or maybe not?
         int rowWidth = (int)Mathf.Sqrt(totalSprites);
         // Generate each limb group for each individual sprite, then generate the next group, then the next one, then the next one.
         for(int k = 0; k < totalSprites; k++) {
             random.Seed = colorSeeds[k];
             // TODO: make it so the amount of colors can be modified during runtime.
-            palette = new Color[4]; // Stores each of the colors that the generated sprite can use.
+            palette = new Color[totalColors]; // Stores each of the colors that the generated sprite can use.
             // Randomly pick a color from the color list for each slot of the palette array.
             for(int i = 0; i < palette.Length; i++) {
                 palette[i] = new Color(colorCodes[random.RandiRange(0, colorCodes.Count - 1)]);
             }
 
-            foreach(KeyValuePair<string, LimbGroup> group in values) {
+            foreach(KeyValuePair<string, LimbGroup> group in parameters) {
                 random.Seed = group.Value.seeds[k]; // Set the randomizer to this limb group's seed.
                 for(float i = 0; i < group.Value.parameters["totalShapes"]; i++) {
                     int vertices = random.RandiRange(3, 6); // Randomly determine how many vertices this shape has.
@@ -176,85 +116,7 @@ public class SpriteGen : Node2D
                 }
             }
         }
-        // Start with Legs.
-        // random.Seed = legSeed; // Set the randomizer's seed to the seed for this limb.
-        // // TODO: make totalShapes a parameter in the dictionary.
-		// float totalShapes = 8f; // This is how many shapes we want to generate for this limb.
-		// for(float i = 0; i < totalShapes; i++) { // Generate one shape for each of the total shapes. Each new shape overlaps the previous.
-		// 	int vertices = random.RandiRange(3, 6); // Randomly determine how many vertices this shape has.
-		// 	float randAngle = random.RandfRange(0, Mathf.Pi * 2); // Randomly determine the angle of this shape.
-        //     // TODO: Add dict parameters for radii.
-		// 	float radiusMin = random.RandfRange(8f, 16f); // Randomly determine the smallest possible radius for this shape.
-		// 	float radiusMax = random.RandfRange(18f, 28f);
-		// 	Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]); // Randomly pick a color for this shape from the palette.
-		// 	Vector2 center = new Vector2(random.RandfRange(-24f, -8f), random.RandfRange(12f, 48f)); // Randomly set a center.
-        //     DrawShape(vertices, center, radiusMin, radiusMax, color); // Use the DrawShape function to generate the shape.
-        //     //CreateShape(vertices, center, radiusMin, radiusMax, color);
-
-		// }
-		// // Then torso.
-        // random.Seed = torsoSeed;
-		// totalShapes = parameters["t_shapeNum"];
-		// for(float i = 0; i < totalShapes; i++) {
-		// 	int vertices = random.RandiRange(3, 6);
-		// 	float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-		// 	float radiusMin = parameters["t_radMin"];
-		// 	float radiusMax = parameters["t_radMax"];
-		// 	Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]);
-		// 	Vector2 center = new Vector2(random.RandfRange(parameters["t_width"], 0f), random.RandfRange(parameters["t_heightMin"], parameters["t_heightMax"]));
-        //     DrawShape(vertices, center, radiusMin, radiusMax, color);
-        //     //CreateShape(vertices, center, radiusMin, radiusMax, color);
-
-		// }
-		// // Arms are next.
-        // random.Seed = armSeed;
-		// totalShapes = 8f;
-		// for(float i = 0; i < totalShapes; i++) {
-		// 	int vertices = random.RandiRange(3, 6);
-		// 	float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-		// 	float radiusMin = 12f; // REPLACE WITH DICTIONARY VALUE
-		// 	float radiusMax = 24f; // REPLACE WITH DICT VALUE
-		// 	Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]);
-		// 	Vector2 center = new Vector2(random.RandfRange(-64f, -24f), random.RandfRange(-24f, 24f));
-        //     DrawShape(vertices, center, radiusMin, radiusMax, color);
-        //     //CreateShape(vertices, center, radiusMin, radiusMax, color);
-
-		// }
-        // // So, head?
-        // random.Seed = headSeed;
-		// totalShapes = 8f;
-		// for(float i = 0; i < totalShapes; i++) {
-		// 	int vertices = random.RandiRange(3, 6);
-		// 	float randAngle = random.RandfRange(0, Mathf.Pi * 2);
-		// 	float radiusMin = 8f; // REPLACE WITH DICTIONARY VALUE
-		// 	float radiusMax = 16f; // REPLACE WITH DICT VALUE
-		// 	Color color = new Color(palette[random.RandiRange(0, palette.Length - 1)]);
-		// 	Vector2 center = new Vector2(random.RandfRange(-24f, 0f), random.RandfRange(-28f, -40f));
-        //     DrawShape(vertices, center, radiusMin, radiusMax, color);
-        //     //CreateShape(vertices, center, radiusMin, radiusMax, color);
-
-		// }
-        
-
-        // foreach(Vector2[] points in shapes) {
-        //     Color[] colors = new Color[] { new Color(0,0,0) };
-        //     Vector2[] outline = new Vector2[Geometry.OffsetPolygon2d(points, 32f).Count];
-        //     Geometry.OffsetPolygon2d(points, 32f).CopyTo(outline, 0);
-        //     DrawPolygon(outline, colors);
-        // }
-        // foreach(Vector2[] points in shapes) {
-        //     Color[] colors = new Color[] { new Color(random.Randf(), random.Randf(), random.Randf()) };
-        //     //Vector2[] outline = new Vector2[points.Length];
-        //     //Geometry.OffsetPolygon2d(points, 6f).CopyTo(outline, 0);
-        //     DrawPolygon(points, colors);
-        // }
 	}
-
-//  // Called every frame. 'delta' is the elapsed time since the previous frame.
-//  public override void _Process(float delta)
-//  {
-//      
-//  }
 
     /// <summary>
     /// Loads colors from a color file.
@@ -288,17 +150,13 @@ public class SpriteGen : Node2D
     /// </summary>
 	public void DrawNewSprite() {
         random.Randomize();
-        colorSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        legSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        torsoSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        armSeed = (ulong)random.RandiRange(0, int.MaxValue);
-        headSeed = (ulong)random.RandiRange(0, int.MaxValue);
 
         // Randomize the seed for each sprite to be drawn.
         for(int k = 0; k < totalSprites; k++) {
-            foreach(KeyValuePair<string, LimbGroup> group in values) {
+            foreach(KeyValuePair<string, LimbGroup> group in parameters) {
                 group.Value.seeds[k] = (ulong)random.RandiRange(0, int.MaxValue); // Set the seed for this sprite to a random value.
             }
+            colorSeeds[k] = (ulong)random.RandiRange(0, int.MaxValue);
         }
 		Update();
 	}
@@ -348,13 +206,6 @@ public class SpriteGen : Node2D
     }
 
     public void CreateShape(int vertexCount, Vector2 center, float radiusMin, float radiusMax, Color color) {
-        //RandomNumberGenerator random = new RandomNumberGenerator();
-        //random.Randomize();
-        // Vector2[] points = new Vector2[4];
-        // points[0] = new Vector2(10, 10) + center;
-        // points[1] = new Vector2(-10, 10) + center;
-        // points[2] = new Vector2(-10, -10) + center;
-        // points[3] = new Vector2(10, -10) + center;
         Vector2[] points = new Vector2[vertexCount];
 		Vector2[] mirrorPoints = new Vector2[vertexCount];
         for(int i = 0; i < vertexCount; i++) {
@@ -385,17 +236,22 @@ public class SpriteGen : Node2D
     }
 
     /// <summary>
-    /// Changes the value of a specific parameter in the dictionary and then forces the renderer to redraw the frame.
+    /// Changes a parameter of a specified LimbGroup.
     /// </summary>
-    /// <param name="newValue">The new value this parameter should have.</param>
-    /// <param name="paramName">The name of the parameter to change in the dictionary.</param>
-    public void ChangeParameter(float newValue, string paramName) {
-        parameters[paramName] = newValue;
+    /// <param name="newValue">The new value of the parameter.</param>
+    /// <param name="groupName">The LimbGroup to edit.</param>
+    /// <param name="paramName">The name of the parameter to change.</param>
+    public void ChangeParameter(float newValue, string groupName, string paramName) {
+        parameters[groupName].parameters[paramName] = newValue;
         Update();
     }
 
-    public void ChangeParameter(float newValue, string groupName, string paramName) {
-        values[groupName].parameters[paramName] = newValue;
+    /// <summary>
+    /// Changes how many colors each sprite has.
+    /// </summary>
+    /// <param name="newValue">The new total amount of colors.</param>
+    public void ChangeColorCount(float newValue) {
+        totalColors = (int) newValue;
         Update();
     }
 
