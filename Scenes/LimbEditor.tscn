@@ -11,16 +11,22 @@ text = "Limb Name"
 align = 1
 uppercase = true
 
-[node name="Label" type="Label" parent="."]
+[node name="XSym" type="CheckBox" parent="."]
 margin_top = 18.0
 margin_right = 220.0
-margin_bottom = 32.0
+margin_bottom = 42.0
+text = "X Symmetry"
+
+[node name="Label" type="Label" parent="."]
+margin_top = 46.0
+margin_right = 220.0
+margin_bottom = 60.0
 text = "# of Shapes"
 
 [node name="ShapeNum" type="HSlider" parent="."]
-margin_top = 36.0
+margin_top = 64.0
 margin_right = 220.0
-margin_bottom = 52.0
+margin_bottom = 80.0
 size_flags_horizontal = 3
 min_value = 1.0
 max_value = 32.0
@@ -28,86 +34,86 @@ value = 8.0
 scrollable = false
 
 [node name="Label2" type="Label" parent="."]
-margin_top = 56.0
+margin_top = 84.0
 margin_right = 220.0
-margin_bottom = 70.0
+margin_bottom = 98.0
 text = "Radius Minimum"
 
 [node name="RadMin" type="HSlider" parent="."]
-margin_top = 74.0
+margin_top = 102.0
 margin_right = 220.0
-margin_bottom = 90.0
+margin_bottom = 118.0
 size_flags_horizontal = 3
 scrollable = false
 
 [node name="Label3" type="Label" parent="."]
-margin_top = 94.0
+margin_top = 122.0
 margin_right = 220.0
-margin_bottom = 108.0
+margin_bottom = 136.0
 text = "Radius Maximum"
 
 [node name="RadMax" type="HSlider" parent="."]
-margin_top = 112.0
+margin_top = 140.0
 margin_right = 220.0
-margin_bottom = 128.0
+margin_bottom = 156.0
 size_flags_horizontal = 3
 scrollable = false
 
 [node name="Label4" type="Label" parent="."]
-margin_top = 132.0
+margin_top = 160.0
 margin_right = 220.0
-margin_bottom = 146.0
+margin_bottom = 174.0
 text = "X Minimum"
 
 [node name="xMin" type="HSlider" parent="."]
-margin_top = 150.0
+margin_top = 178.0
 margin_right = 220.0
-margin_bottom = 166.0
+margin_bottom = 194.0
 size_flags_horizontal = 3
 min_value = -64.0
 max_value = 64.0
 scrollable = false
 
 [node name="Label5" type="Label" parent="."]
-margin_top = 170.0
+margin_top = 198.0
 margin_right = 220.0
-margin_bottom = 184.0
+margin_bottom = 212.0
 text = "X Maximum"
 
 [node name="xMax" type="HSlider" parent="."]
-margin_top = 188.0
+margin_top = 216.0
 margin_right = 220.0
-margin_bottom = 204.0
+margin_bottom = 232.0
 size_flags_horizontal = 3
 min_value = -64.0
 max_value = 64.0
 scrollable = false
 
 [node name="Label6" type="Label" parent="."]
-margin_top = 208.0
+margin_top = 236.0
 margin_right = 220.0
-margin_bottom = 222.0
+margin_bottom = 250.0
 text = "Y Minimum"
 
 [node name="yMin" type="HSlider" parent="."]
-margin_top = 226.0
+margin_top = 254.0
 margin_right = 220.0
-margin_bottom = 242.0
+margin_bottom = 270.0
 size_flags_horizontal = 3
 min_value = -64.0
 max_value = 64.0
 scrollable = false
 
 [node name="Label7" type="Label" parent="."]
-margin_top = 246.0
+margin_top = 274.0
 margin_right = 220.0
-margin_bottom = 260.0
+margin_bottom = 288.0
 text = "Y Maximum"
 
 [node name="yMax" type="HSlider" parent="."]
-margin_top = 264.0
+margin_top = 292.0
 margin_right = 220.0
-margin_bottom = 280.0
+margin_bottom = 308.0
 size_flags_horizontal = 3
 min_value = -64.0
 max_value = 64.0

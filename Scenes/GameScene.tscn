@@ -5,7 +5,7 @@
 [node name="GameScene" type="Node"]
 
 [node name="SpriteGen" type="Node2D" parent="."]
-position = Vector2( 128, 128 )
+position = Vector2( 80, 80 )
 script = ExtResource( 1 )
 
 [node name="UI" type="Node" parent="SpriteGen"]
@@ -14,37 +14,173 @@ script = ExtResource( 1 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="Button" type="Button" parent="SpriteGen/UI/Menus"]
-margin_left = 13.0
-margin_top = 566.0
-margin_right = 64.0
-margin_bottom = 586.0
-text = "Again!"
+[node name="ColorRect" type="ColorRect" parent="SpriteGen/UI/Menus"]
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -290.0
+color = Color( 0, 0, 0, 1 )
+
+[node name="Randomize" type="Button" parent="SpriteGen/UI/Menus"]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -200.0
+margin_top = -20.0
+margin_right = -102.0
+text = "Reroll Shapes"
+
+[node name="RandomizeColor" type="Button" parent="SpriteGen/UI/Menus"]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -98.0
+margin_top = -20.0
+text = "Reroll Colors"
 
 [node name="ScrollPanel" type="ScrollContainer" parent="SpriteGen/UI/Menus"]
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = -283.0
+margin_bottom = -45.0
 scroll_horizontal_enabled = false
 
 [node name="ParamList" type="VBoxContainer" parent="SpriteGen/UI/Menus/ScrollPanel"]
 margin_right = 283.0
-margin_bottom = 34.0
+margin_bottom = 118.0
 size_flags_horizontal = 3
 
-[node name="colorLabel" type="Label" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
+[node name="PresetSelect" type="Control" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
 margin_right = 283.0
-margin_bottom = 14.0
+margin_bottom = 24.0
+rect_min_size = Vector2( 0, 24 )
+
+[node name="presetLabel" type="Label" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/PresetSelect"]
+anchor_top = 0.5
+anchor_bottom = 0.5
+margin_top = -7.0
+margin_right = 45.0
+margin_bottom = 7.0
+text = "Preset:"
+
+[node name="importButton" type="Button" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/PresetSelect"]
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+margin_left = -101.0
+margin_top = -10.0
+margin_bottom = 10.0
+text = "Import/Export"
+
+[node name="ColorSelect" type="Control" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
+margin_top = 28.0
+margin_right = 283.0
+margin_bottom = 52.0
+rect_min_size = Vector2( 0, 24 )
+
+[node name="paletteLabel" type="Label" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/ColorSelect"]
+anchor_top = 0.5
+anchor_bottom = 0.5
+margin_top = -7.0
+margin_right = 49.0
+margin_bottom = 7.0
+text = "Palette:"
+
+[node name="loadPaletteBtn" type="Button" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/ColorSelect"]
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+margin_left = -91.0
+margin_top = -10.0
+margin_bottom = 10.0
+text = "Load Palette"
+
+[node name="BgColorSelect" type="Control" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
+margin_top = 56.0
+margin_right = 283.0
+margin_bottom = 80.0
+rect_min_size = Vector2( 0, 24 )
+
+[node name="paletteLabel2" type="Label" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/BgColorSelect"]
+anchor_top = 0.5
+anchor_bottom = 0.5
+margin_top = -7.0
+margin_right = 49.0
+margin_bottom = 7.0
+text = "Background Color:"
+
+[node name="BgColorPicker" type="ColorPickerButton" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/BgColorSelect"]
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+margin_left = -118.0
+margin_top = -10.0
+margin_bottom = 10.0
+text = "Change BG Color"
+color = Color( 0.301961, 0.301961, 0.301961, 1 )
+
+[node name="colorLabel" type="Label" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
+margin_top = 84.0
+margin_right = 283.0
+margin_bottom = 98.0
 text = "Max Colors"
 
 [node name="all_colors" type="HSlider" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
-margin_top = 18.0
+margin_top = 102.0
 margin_right = 283.0
-margin_bottom = 34.0
+margin_bottom = 118.0
 min_value = 1.0
 max_value = 12.0
 value = 4.0
 
-[connection signal="pressed" from="SpriteGen/UI/Menus/Button" to="SpriteGen" method="DrawNewSprite"]
+[node name="PaletteLoadDialog" type="FileDialog" parent="SpriteGen/UI/Menus"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -158.0
+margin_top = -200.0
+margin_right = 158.0
+margin_bottom = 200.0
+rect_min_size = Vector2( 300, 400 )
+window_title = "Load Palette"
+mode_overrides_title = false
+mode = 0
+filters = PoolStringArray( "*.gpl" )
+
+[node name="PresetDialog" type="ConfirmationDialog" parent="SpriteGen/UI/Menus"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -300.0
+margin_top = -250.0
+margin_right = 300.0
+margin_bottom = 250.0
+rect_min_size = Vector2( 600, 500 )
+window_title = "Import/Export Preset"
+dialog_text = "To export, copy ALL of the text here and save it somewhere on your PC for safekeeping.
+To import, paste in ALL of the text from a preset you have saved, then click OK."
+
+[node name="PresetText" type="TextEdit" parent="SpriteGen/UI/Menus/PresetDialog"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 8.0
+margin_top = 39.0
+margin_right = -8.0
+margin_bottom = -36.0
+
+[connection signal="pressed" from="SpriteGen/UI/Menus/Randomize" to="SpriteGen" method="DrawNewSprite"]
+[connection signal="pressed" from="SpriteGen/UI/Menus/RandomizeColor" to="SpriteGen" method="RandomizeColors"]
+[connection signal="pressed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/PresetSelect/importButton" to="SpriteGen" method="OpenPresetMenu"]
+[connection signal="pressed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/ColorSelect/loadPaletteBtn" to="SpriteGen" method="OpenPaletteLoadMenu"]
+[connection signal="color_changed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/BgColorSelect/BgColorPicker" to="SpriteGen" method="SetBackgroundColor"]
 [connection signal="value_changed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/all_colors" to="SpriteGen" method="ChangeColorCount"]
+[connection signal="file_selected" from="SpriteGen/UI/Menus/PaletteLoadDialog" to="SpriteGen" method="LoadColors"]
+[connection signal="confirmed" from="SpriteGen/UI/Menus/PresetDialog" to="SpriteGen" method="LoadPresetData"]

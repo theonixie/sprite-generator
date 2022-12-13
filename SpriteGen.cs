@@ -18,7 +18,7 @@ public class SpriteGen : Node2D
 
         public Dictionary<string, float> parameters;
 
-        public LimbGroup(int seedCount, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa) {
+        public LimbGroup(int seedCount, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa, float symm) {
             parameters = new Dictionary<string, float>();
             
             seeds = new ulong[seedCount];
@@ -29,6 +29,7 @@ public class SpriteGen : Node2D
             parameters.Add("xMax", xMa);
             parameters.Add("yMin", yMi);
             parameters.Add("yMax", yMa);
+            parameters.Add("xSymmetry", symm);
         }
     }
 
@@ -55,6 +56,12 @@ public class SpriteGen : Node2D
     /// <summary> The node containing the parameter list. LimbGroup editors are added to this node.</summary>
     private Node menuListNode;
 
+    private Label paletteNameLabel;
+    private FileDialog loadPaletteDialog;
+
+    private AcceptDialog presetDialog;
+    private TextEdit presetTextEdit;
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -62,12 +69,15 @@ public class SpriteGen : Node2D
         menuListNode = GetNode<Node>("UI/Menus/ScrollPanel/ParamList");
 
         parameters = new Dictionary<string, LimbGroup>();
-        parameters.Add("legs", new LimbGroup(totalSprites, 8, 12, 24, -24, -8, 24, 48));
-        parameters.Add("torso", new LimbGroup(totalSprites, 16, 8, 32, -18, 0, -24, 24));
-        parameters.Add("arms", new LimbGroup(totalSprites, 8, 12, 24, -64, -24, -24, 24));
-        parameters.Add("head", new LimbGroup(totalSprites, 8, 8, 16, -24, 0, -28, -40));
+        // Note: int seedCount, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa, float symm
+        parameters.Add("legs", new LimbGroup(totalSprites, 8, 12, 24, -24, -8, 24, 48, 1));
+        parameters.Add("torso", new LimbGroup(totalSprites, 12, 8, 26, -12, 0, -24, 24, 1));
+        parameters.Add("arms", new LimbGroup(totalSprites, 8, 12, 24, -44, -34, -24, 24, 1));
+        parameters.Add("head", new LimbGroup(totalSprites, 8, 8, 16, -24, 0, -28, -40, 1));
+        parameters.Add("face", new LimbGroup(totalSprites, 8, 2, 10, -16, 6, -28, -40, 1));
         CreateLimbEditorPanel("torso");
         CreateLimbEditorPanel("head");
+        CreateLimbEditorPanel("face");
         CreateLimbEditorPanel("arms");
         CreateLimbEditorPanel("legs");
 
@@ -88,8 +98,14 @@ public class SpriteGen : Node2D
             colorSeeds[i] = (ulong)random.RandiRange(0, int.MaxValue);
         }
 
+        paletteNameLabel = GetNode<Label>("UI/Menus/ScrollPanel/ParamList/ColorSelect/paletteLabel");
         //LoadColors("res://Palettes/jewel-tone-appalachia28.gpl");
         LoadColors("res://Palettes/sk-24.gpl");
+
+        loadPaletteDialog = GetNode<FileDialog>("UI/Menus/PaletteLoadDialog");
+
+        presetDialog = GetNode<AcceptDialog>("UI/Menus/PresetDialog");
+        presetTextEdit = GetNode<TextEdit>("UI/Menus/PresetDialog/PresetText");
 	}
 
 	public override void _Draw() {
@@ -111,8 +127,8 @@ public class SpriteGen : Node2D
                     int vertices = random.RandiRange(3, 6); // Randomly determine how many vertices this shape has.
                     Color color  = new Color(palette[random.RandiRange(0, palette.Length - 1)]); // Randomly pick a color for this shape from the palette.
                     Vector2 center = new Vector2(random.RandfRange(group.Value.parameters["xMin"], group.Value.parameters["xMax"]), random.RandfRange(group.Value.parameters["yMin"], group.Value.parameters["yMax"]));
-                    center += new Vector2((k % rowWidth) * 128f, (k / rowWidth) * 128f);
-                    DrawShape(vertices, center, (k % rowWidth) * 128f, group.Value.parameters["radMin"], group.Value.parameters["radMax"], color); // Use the DrawShape function to generate the shape.
+                    center += new Vector2((k % rowWidth) * 144f, (k / rowWidth) * 144f);
+                    DrawShape(vertices, center, (k % rowWidth) * 144f, group.Value.parameters["radMin"], group.Value.parameters["radMax"], color, group.Value.parameters["xSymmetry"] == 1); // Use the DrawShape function to generate the shape.
                 }
             }
         }
@@ -123,6 +139,8 @@ public class SpriteGen : Node2D
     /// </summary>
     /// <param name="filePath">The path leading to the color palette to load.</param>
     private void LoadColors(string filePath) {
+        if(filePath.Substring(filePath.Length() - 3) != "gpl") return;
+
         File colors = new Godot.File(); // Create a file object to store the colors that are from the palette file.
         colors.Open(filePath, File.ModeFlags.Read); // Load a palette file.
         // Skip the first four lines of text, to skip the palette description.
@@ -143,6 +161,51 @@ public class SpriteGen : Node2D
         }
 
         colors.Close(); // Close the palette file to prevent memory leaks.
+        paletteNameLabel.Text = "Palette: " + filePath.Split(new String[] {"/"}, StringSplitOptions.None)[3];
+        Update();
+    }
+
+    public void OpenPaletteLoadMenu() {
+        loadPaletteDialog.CurrentDir = "res://Palettes/";
+        loadPaletteDialog.PopupCentered();
+    }
+
+    public void OpenPresetMenu() {
+        presetDialog.PopupCentered();
+        string presetData = "";
+        foreach(KeyValuePair<string, LimbGroup> group in parameters) {
+            if(presetData != "") presetData += "\n";
+            presetData += group.Key;
+            foreach(KeyValuePair<string, float> value in group.Value.parameters) {
+                presetData += "\n" + value.Value;
+            }
+        }
+
+        presetTextEdit.Text = presetData;
+    }
+
+    public void LoadPresetData() {
+        string[] importText = presetTextEdit.Text.Split(new String[] {"\n"}, StringSplitOptions.None);
+        Dictionary<string, LimbGroup> newParameters = new Dictionary<string, LimbGroup>();
+        try {
+            for(int i = 0; i < importText.Length; i += 9) {
+                newParameters.Add(importText[i], new LimbGroup(totalSprites, importText[i+1].ToFloat(), importText[i+2].ToFloat(), importText[i+3].ToFloat(), importText[i+4].ToFloat(), importText[i+5].ToFloat(), importText[i+6].ToFloat(), importText[i+7].ToFloat(), importText[i+8].ToFloat()));
+            }
+            parameters.Clear();
+            parameters = newParameters;
+            DrawNewSprite();
+        } catch(Exception e) {
+            GD.Print("Attempted to load faulty data.");
+        }
+
+        // parameters.Clear();
+        // parameters = newParameters;
+        // DrawNewSprite();
+        
+    }
+
+    public void SetBackgroundColor(Color newColor) {
+        VisualServer.SetDefaultClearColor(newColor);
     }
 
     /// <summary>
@@ -161,6 +224,16 @@ public class SpriteGen : Node2D
 		Update();
 	}
 
+    public void RandomizeColors() {
+
+        random.Randomize();
+        // Randomize the color seed for each sprite to be drawn.
+        for(int k = 0; k < totalSprites; k++) {
+            colorSeeds[k] = (ulong)random.RandiRange(0, int.MaxValue);
+        }
+		Update();
+    }
+
     /// <summary>
     /// Creates a randomized shape based on provided parameters.
     /// </summary>
@@ -170,7 +243,7 @@ public class SpriteGen : Node2D
     /// <param name="radiusMin">The smallest distance a point can be from the shape's center.</param>
     /// <param name="radiusMax">The largest distance a point can be from the shape's center.</param>
     /// <param name="color">The color of this shape.</param>
-	public void DrawShape(int vertexCount, Vector2 center, float mirrorCenter, float radiusMin, float radiusMax, Color color) {
+	public void DrawShape(int vertexCount, Vector2 center, float mirrorCenter, float radiusMin, float radiusMax, Color color, bool isSymmetrical) {
         Vector2[] points = new Vector2[vertexCount]; // The points of this shape.
 		Vector2[] mirrorPoints = new Vector2[vertexCount]; // The reflected version of this shape on the opposite side.
         Vector2[] sidePoints = new Vector2[vertexCount]; // The side profile of this shape.
@@ -182,52 +255,26 @@ public class SpriteGen : Node2D
             // If the side points is past the "center" of the sprite, divide it's distance by half.
             // Helps emulate having an actual curve to the body so it's not a direct clone of the front view.
             if(sidePoints[i].x > 160f) sidePoints[i].x -= (sidePoints[i].x - 160) / 2f;
-			points[i].x = Mathf.Clamp(points[i].x, mirrorCenter - 64f, mirrorCenter);
+            
+			points[i].x = Mathf.Clamp(points[i].x, mirrorCenter - 64f, (isSymmetrical ? mirrorCenter : (mirrorCenter + 64f)));
             //sidePoints[i].x = Mathf.Clamp(sidePoints[i].x, 0f, 165f);
             points[i].y = (radius * Mathf.Sin((((float)i / vertexCount) * Mathf.Pi * 2f) + angle)) + center.y;
             sidePoints[i].y = points[i].y;
 
 			// Now make the mirrored version of this shape.
-			mirrorPoints[i].x = mirrorCenter + ((points[i].x - mirrorCenter) * -1 );
-			mirrorPoints[i].y = points[i].y; 
+            if(isSymmetrical) {
+                mirrorPoints[i].x = mirrorCenter + ((points[i].x - mirrorCenter) * -1 );
+                mirrorPoints[i].y = points[i].y; 
+            }
             //GD.Print(points[i].x + " | " + points[i].y);
         }
 
         Color[] colors = new Color[] { color };
 
         DrawPolygon(points, colors);
-		DrawPolygon(mirrorPoints, colors);
+        if(isSymmetrical)
+		    DrawPolygon(mirrorPoints, colors);
         //DrawPolygon(sidePoints, colors);
-        // Rect2 position = new Rect2(new Vector2(8, 0), new Vector2(8, 16));
-        // Rect2 sourcePosition = new Rect2(Vector2.Zero, new Vector2(8, 16));
-        // await ToSignal(GetTree(), "idle_frame");
-        // Texture.DrawRectRegion(Texture.GetRid(), position, sourcePosition);
-        
-    }
-
-    public void CreateShape(int vertexCount, Vector2 center, float radiusMin, float radiusMax, Color color) {
-        Vector2[] points = new Vector2[vertexCount];
-		Vector2[] mirrorPoints = new Vector2[vertexCount];
-        for(int i = 0; i < vertexCount; i++) {
-            float angle = random.RandfRange(0, (1.0f / vertexCount) * Mathf.Pi * 2f);
-            float radius = random.RandfRange(radiusMin, radiusMax);
-            points[i].x = (radius * Mathf.Cos((((float)i / vertexCount) * Mathf.Pi * 2f) + angle)) + center.x;
-			points[i].x = Mathf.Clamp(points[i].x, -64f, 0f);
-            points[i].y = (radius * Mathf.Sin((((float)i / vertexCount) * Mathf.Pi * 2f) + angle)) + center.y;
-
-			// Now make the mirrored version of this shape.
-			mirrorPoints[i].x = -points[i].x;
-			mirrorPoints[i].y = points[i].y; 
-            //GD.Print(points[i].x + " | " + points[i].y);
-        }
-
-        Color[] colors = new Color[] { color };
-
-        //DrawPolygon(points, colors);
-		//DrawPolygon(mirrorPoints, colors);
-        shapes.Add(points);
-        shapes.Add(mirrorPoints);
-
         // Rect2 position = new Rect2(new Vector2(8, 0), new Vector2(8, 16));
         // Rect2 sourcePosition = new Rect2(Vector2.Zero, new Vector2(8, 16));
         // await ToSignal(GetTree(), "idle_frame");
@@ -243,6 +290,11 @@ public class SpriteGen : Node2D
     /// <param name="paramName">The name of the parameter to change.</param>
     public void ChangeParameter(float newValue, string groupName, string paramName) {
         parameters[groupName].parameters[paramName] = newValue;
+        Update();
+    }
+
+    public void ToggleSymmetry(bool newValue, string groupName, string paramName) {
+        parameters[groupName].parameters[paramName] = newValue ? 1 : 0;
         Update();
     }
 
@@ -266,12 +318,21 @@ public class SpriteGen : Node2D
         menuListNode.AddChild(menuInstance);
         menuInstance.GetNode<Label>("LimbName").Text = groupName;
 
+        menuInstance.GetNode<CheckBox>("XSym").Connect("toggled", this, "ToggleSymmetry", new Godot.Collections.Array() {groupName, "xSymmetry"});
+        menuInstance.GetNode<CheckBox>("XSym").Pressed = parameters[groupName].parameters["xSymmetry"] == 1;
         menuInstance.GetNode<HSlider>("ShapeNum").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "totalShapes"});
+        menuInstance.GetNode<HSlider>("ShapeNum").Value = parameters[groupName].parameters["totalShapes"];
         menuInstance.GetNode<HSlider>("RadMin").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "radMin"});
+        menuInstance.GetNode<HSlider>("RadMin").Value = parameters[groupName].parameters["radMin"];
         menuInstance.GetNode<HSlider>("RadMax").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "radMax"});
+        menuInstance.GetNode<HSlider>("RadMax").Value = parameters[groupName].parameters["radMax"];
         menuInstance.GetNode<HSlider>("xMin").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "xMin"});
+        menuInstance.GetNode<HSlider>("xMin").Value = parameters[groupName].parameters["xMin"];
         menuInstance.GetNode<HSlider>("xMax").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "xMax"});
+        menuInstance.GetNode<HSlider>("xMax").Value = parameters[groupName].parameters["xMax"];
         menuInstance.GetNode<HSlider>("yMin").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "yMin"});
+        menuInstance.GetNode<HSlider>("yMin").Value = parameters[groupName].parameters["yMin"];
         menuInstance.GetNode<HSlider>("yMax").Connect("value_changed", this, "ChangeParameter", new Godot.Collections.Array() {groupName, "yMax"});
+        menuInstance.GetNode<HSlider>("yMax").Value = parameters[groupName].parameters["yMax"];
     }
 }
