@@ -23,21 +23,19 @@ color = Color( 0, 0, 0, 1 )
 
 [node name="Randomize" type="Button" parent="SpriteGen/UI/Menus"]
 anchor_left = 1.0
-anchor_top = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
-margin_left = -200.0
-margin_top = -20.0
-margin_right = -102.0
+margin_left = -197.0
+margin_right = -99.0
+margin_bottom = 20.0
+hint_tooltip = "Generate a completely new batch of sprites. WARNING: The current batch will be lost!"
 text = "Reroll Shapes"
 
 [node name="RandomizeColor" type="Button" parent="SpriteGen/UI/Menus"]
 anchor_left = 1.0
-anchor_top = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
 margin_left = -98.0
-margin_top = -20.0
+margin_bottom = 20.0
+hint_tooltip = "Randomizes the palettes of all current sprites without randomizing their shapes."
 text = "Reroll Colors"
 
 [node name="ScrollPanel" type="ScrollContainer" parent="SpriteGen/UI/Menus"]
@@ -45,7 +43,7 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = -283.0
-margin_bottom = -45.0
+margin_top = 23.0
 scroll_horizontal_enabled = false
 
 [node name="ParamList" type="VBoxContainer" parent="SpriteGen/UI/Menus/ScrollPanel"]
@@ -64,16 +62,26 @@ anchor_bottom = 0.5
 margin_top = -7.0
 margin_right = 45.0
 margin_bottom = 7.0
-text = "Preset:"
+text = "Config:"
+
+[node name="presetButton" type="Button" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/PresetSelect"]
+visible = false
+margin_left = 62.0
+margin_top = 2.0
+margin_right = 166.0
+margin_bottom = 22.0
+text = "Choose Preset"
 
 [node name="importButton" type="Button" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList/PresetSelect"]
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-margin_left = -101.0
+margin_left = -103.0
 margin_top = -10.0
+margin_right = -2.0
 margin_bottom = 10.0
+hint_tooltip = "Save or load a set of parameters."
 text = "Import/Export"
 
 [node name="ColorSelect" type="Control" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
@@ -98,6 +106,7 @@ anchor_bottom = 0.5
 margin_left = -91.0
 margin_top = -10.0
 margin_bottom = 10.0
+hint_tooltip = "Change the color palette that sprites can pick from."
 text = "Load Palette"
 
 [node name="BgColorSelect" type="Control" parent="SpriteGen/UI/Menus/ScrollPanel/ParamList"]
@@ -122,6 +131,7 @@ anchor_bottom = 0.5
 margin_left = -118.0
 margin_top = -10.0
 margin_bottom = 10.0
+hint_tooltip = "Change the color of the background."
 text = "Change BG Color"
 color = Color( 0.301961, 0.301961, 0.301961, 1 )
 
@@ -135,6 +145,7 @@ text = "Max Colors"
 margin_top = 102.0
 margin_right = 283.0
 margin_bottom = 118.0
+hint_tooltip = "The maximum amount of colors any sprite can have. Note that generated sprites might have less colors than this value."
 min_value = 1.0
 max_value = 12.0
 value = 4.0
@@ -176,11 +187,39 @@ margin_top = 39.0
 margin_right = -8.0
 margin_bottom = -36.0
 
+[node name="PresetLoadDialog" type="AcceptDialog" parent="SpriteGen/UI/Menus"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -124.0
+margin_top = -175.0
+margin_right = 124.0
+margin_bottom = 175.0
+window_title = "Load Preset"
+dialog_text = "Choose a preset from the list below.
+Click \"OK\" to cancel."
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SpriteGen/UI/Menus/PresetLoadDialog"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 5.0
+margin_top = 44.0
+margin_right = -5.0
+margin_bottom = -44.0
+
+[node name="Button" type="Button" parent="SpriteGen/UI/Menus/PresetLoadDialog/VBoxContainer"]
+margin_right = 238.0
+margin_bottom = 20.0
+text = "Default"
+
 [connection signal="pressed" from="SpriteGen/UI/Menus/Randomize" to="SpriteGen" method="DrawNewSprite"]
 [connection signal="pressed" from="SpriteGen/UI/Menus/RandomizeColor" to="SpriteGen" method="RandomizeColors"]
+[connection signal="pressed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/PresetSelect/presetButton" to="SpriteGen/UI/Menus/PresetLoadDialog" method="popup_centered"]
 [connection signal="pressed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/PresetSelect/importButton" to="SpriteGen" method="OpenPresetMenu"]
 [connection signal="pressed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/ColorSelect/loadPaletteBtn" to="SpriteGen" method="OpenPaletteLoadMenu"]
 [connection signal="color_changed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/BgColorSelect/BgColorPicker" to="SpriteGen" method="SetBackgroundColor"]
 [connection signal="value_changed" from="SpriteGen/UI/Menus/ScrollPanel/ParamList/all_colors" to="SpriteGen" method="ChangeColorCount"]
 [connection signal="file_selected" from="SpriteGen/UI/Menus/PaletteLoadDialog" to="SpriteGen" method="LoadColors"]
 [connection signal="confirmed" from="SpriteGen/UI/Menus/PresetDialog" to="SpriteGen" method="LoadPresetData"]
+[connection signal="pressed" from="SpriteGen/UI/Menus/PresetLoadDialog/VBoxContainer/Button" to="SpriteGen" method="LoadPresetData" binds= [ "legs81224-24-824481torso122021-270-24241arms81224-44-34-24241head82134-199-28-401face6917-326-45-251" ]]

@@ -12,11 +12,12 @@ config_version=4
 
 config/name="SpriteGenerator"
 run/main_scene="res://Scenes/GameScene.tscn"
+run/delta_smoothing=false
 config/icon="res://icon.png"
 
 [display]
 
-window/size/height=664
+window/size/width=900
 
 [gui]
 

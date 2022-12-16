@@ -71,10 +71,10 @@ public class SpriteGen : Node2D
         parameters = new Dictionary<string, LimbGroup>();
         // Note: int seedCount, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa, float symm
         parameters.Add("legs", new LimbGroup(totalSprites, 8, 12, 24, -24, -8, 24, 48, 1));
-        parameters.Add("torso", new LimbGroup(totalSprites, 12, 8, 26, -12, 0, -24, 24, 1));
+        parameters.Add("torso", new LimbGroup(totalSprites, 12, 20, 21, -27, 0, -24, 24, 1));
         parameters.Add("arms", new LimbGroup(totalSprites, 8, 12, 24, -44, -34, -24, 24, 1));
-        parameters.Add("head", new LimbGroup(totalSprites, 8, 8, 16, -24, 0, -28, -40, 1));
-        parameters.Add("face", new LimbGroup(totalSprites, 8, 2, 10, -16, 6, -28, -40, 1));
+        parameters.Add("head", new LimbGroup(totalSprites, 8, 21, 34, -19, 9, -28, -40, 1));
+        parameters.Add("face", new LimbGroup(totalSprites, 6, 9, 17, -32, 6, -45, -25, 1));
         CreateLimbEditorPanel("torso");
         CreateLimbEditorPanel("head");
         CreateLimbEditorPanel("face");
@@ -128,7 +128,7 @@ public class SpriteGen : Node2D
                     Color color  = new Color(palette[random.RandiRange(0, palette.Length - 1)]); // Randomly pick a color for this shape from the palette.
                     Vector2 center = new Vector2(random.RandfRange(group.Value.parameters["xMin"], group.Value.parameters["xMax"]), random.RandfRange(group.Value.parameters["yMin"], group.Value.parameters["yMax"]));
                     center += new Vector2((k % rowWidth) * 144f, (k / rowWidth) * 144f);
-                    DrawShape(vertices, center, (k % rowWidth) * 144f, group.Value.parameters["radMin"], group.Value.parameters["radMax"], color, group.Value.parameters["xSymmetry"] == 1); // Use the DrawShape function to generate the shape.
+                    DrawShape(vertices, center, (k % rowWidth) * 144f, (k / rowWidth) * 144f, group.Value.parameters["radMin"], group.Value.parameters["radMax"], color, group.Value.parameters["xSymmetry"] == 1); // Use the DrawShape function to generate the shape.
                 }
             }
         }
@@ -204,6 +204,26 @@ public class SpriteGen : Node2D
         
     }
 
+    public void LoadPresetData(string inText) {
+        string[] importText = inText.Split(new String[] {"\n"}, StringSplitOptions.None);
+        Dictionary<string, LimbGroup> newParameters = new Dictionary<string, LimbGroup>();
+        try {
+            for(int i = 0; i < importText.Length; i += 9) {
+                newParameters.Add(importText[i], new LimbGroup(totalSprites, importText[i+1].ToFloat(), importText[i+2].ToFloat(), importText[i+3].ToFloat(), importText[i+4].ToFloat(), importText[i+5].ToFloat(), importText[i+6].ToFloat(), importText[i+7].ToFloat(), importText[i+8].ToFloat()));
+            }
+            parameters.Clear();
+            parameters = newParameters;
+            DrawNewSprite();
+        } catch(Exception e) {
+            GD.Print("Attempted to load faulty data.");
+        }
+
+        // parameters.Clear();
+        // parameters = newParameters;
+        // DrawNewSprite();
+        
+    }
+
     public void SetBackgroundColor(Color newColor) {
         VisualServer.SetDefaultClearColor(newColor);
     }
@@ -243,7 +263,7 @@ public class SpriteGen : Node2D
     /// <param name="radiusMin">The smallest distance a point can be from the shape's center.</param>
     /// <param name="radiusMax">The largest distance a point can be from the shape's center.</param>
     /// <param name="color">The color of this shape.</param>
-	public void DrawShape(int vertexCount, Vector2 center, float mirrorCenter, float radiusMin, float radiusMax, Color color, bool isSymmetrical) {
+	public void DrawShape(int vertexCount, Vector2 center, float mirrorCenter, float verticalCenter, float radiusMin, float radiusMax, Color color, bool isSymmetrical) {
         Vector2[] points = new Vector2[vertexCount]; // The points of this shape.
 		Vector2[] mirrorPoints = new Vector2[vertexCount]; // The reflected version of this shape on the opposite side.
         Vector2[] sidePoints = new Vector2[vertexCount]; // The side profile of this shape.
@@ -259,6 +279,7 @@ public class SpriteGen : Node2D
 			points[i].x = Mathf.Clamp(points[i].x, mirrorCenter - 64f, (isSymmetrical ? mirrorCenter : (mirrorCenter + 64f)));
             //sidePoints[i].x = Mathf.Clamp(sidePoints[i].x, 0f, 165f);
             points[i].y = (radius * Mathf.Sin((((float)i / vertexCount) * Mathf.Pi * 2f) + angle)) + center.y;
+            points[i].y = Mathf.Clamp(points[i].y, verticalCenter - 64f, verticalCenter + 64f);
             sidePoints[i].y = points[i].y;
 
 			// Now make the mirrored version of this shape.
