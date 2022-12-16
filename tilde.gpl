@@ -1,0 +1,14 @@
+GIMP Palette
+#Palette Name: Tilde
+#Description: The palette used in the game Tilde: https://eigenbom.itch.io/tilde - Credit: polyphorge https://github.com/1bardesign/tilde-game/blob/master/src/palette/pigment.lua
+#Colors: 10
+85	62	91	553e5b
+146	143	142	928f8e
+248	248	209	f8f8d1
+109	140	74	6d8c4a
+74	68	60	4a443c
+52	33	33	342121
+123	65	54	7b4136
+68	49	49	443131
+197	152	70	c59846
+23	60	88	173c58

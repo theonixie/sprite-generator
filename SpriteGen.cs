@@ -100,7 +100,7 @@ public class SpriteGen : Node2D
 
         paletteNameLabel = GetNode<Label>("UI/Menus/ScrollPanel/ParamList/ColorSelect/paletteLabel");
         //LoadColors("res://Palettes/jewel-tone-appalachia28.gpl");
-        LoadColors("res://Palettes/sk-24.gpl");
+        LoadColors("res://sk-24.gpl");
 
         loadPaletteDialog = GetNode<FileDialog>("UI/Menus/PaletteLoadDialog");
 
@@ -139,10 +139,16 @@ public class SpriteGen : Node2D
     /// </summary>
     /// <param name="filePath">The path leading to the color palette to load.</param>
     private void LoadColors(string filePath) {
+        //string fileToLoad = filePath.Split(new String[] {"/"}, StringSplitOptions.None)[filePath.Split(new String[] {"/"}, StringSplitOptions.None).Length - 1];
+        //fileToLoad = "res://" + fileToLoad;
         if(filePath.Substring(filePath.Length() - 3) != "gpl") return;
-
+        
         File colors = new Godot.File(); // Create a file object to store the colors that are from the palette file.
         colors.Open(filePath, File.ModeFlags.Read); // Load a palette file.
+
+        //var colors = ResourceLoader.Load(filePath);
+        //var colors = (TextFile)GD.Load(filePath);
+        
         // Skip the first four lines of text, to skip the palette description.
         colors.GetLine();
         colors.GetLine();
@@ -161,12 +167,12 @@ public class SpriteGen : Node2D
         }
 
         colors.Close(); // Close the palette file to prevent memory leaks.
-        paletteNameLabel.Text = "Palette: " + filePath.Split(new String[] {"/"}, StringSplitOptions.None)[3];
+        //paletteNameLabel.Text = "Palette: " + filePath.Split(new String[] {"/"}, StringSplitOptions.None)[3];
         Update();
     }
 
     public void OpenPaletteLoadMenu() {
-        loadPaletteDialog.CurrentDir = "res://Palettes/";
+        loadPaletteDialog.CurrentDir = "res://";
         loadPaletteDialog.PopupCentered();
     }
 
