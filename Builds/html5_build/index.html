@@ -114,7 +114,31 @@
 	</style>
 <link id='-gd-engine-icon' rel='icon' type='image/png' href='index.icon.png' />
 <link rel='apple-touch-icon' href='index.apple-touch-icon.png'/>
+<script>
+var gd_callbacks = {
+   dataLoaded: null
+}
 
+function loadData() {
+   var input = document.createElement('input');
+   input.setAttribute('type', 'file');
+   input.setAttribute('accept', '.txt');
+   input.click();
+
+   input.addEventListener('change', evt => {
+      var file = evt.target.files[0];
+      var reader = new FileReader();
+
+      reader.readAsText(file);
+
+      reader.onloadend = function(evt) {
+         if (gd_callbacks.dataLoaded) {
+            gd_callbacks.dataLoaded(reader.result);
+         }
+      }
+   });
+}
+</script>
 </head>
 <body>
 	<canvas id='canvas'>
@@ -139,7 +163,7 @@
 	<script type='text/javascript' src='index.js'></script>
 	<script type='text/javascript'>//<![CDATA[
 
-		const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":18507040,"index.wasm":26058406},"focusCanvas":true,"gdnativeLibs":[]};
+		const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":18513488,"index.wasm":26058406},"focusCanvas":true,"gdnativeLibs":[]};
 		var engine = new Engine(GODOT_CONFIG);
 
 		(function() {

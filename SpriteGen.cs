@@ -38,6 +38,9 @@ public class SpriteGen : Node2D
 
     /// <summary> How many sprites to generate. MUST BE A NUMBER THAT CAN BE SQUARE-ROOTED. </summary>
     private int totalSprites = 16;
+
+    private float outlineOffset = 5f;
+
     /// <summary> A list of Vector2 arrays that define the points of each shape.<br/>
     /// Each individual Vector2 array represents a single unique shape. </summary>
     private List<Vector2[]> shapes;
@@ -59,14 +62,16 @@ public class SpriteGen : Node2D
     private Label paletteNameLabel;
     private FileDialog loadPaletteDialog;
 
-    private AcceptDialog presetDialog;
+    private WindowDialog presetDialog;
     private TextEdit presetTextEdit;
+    private OutlineBG outlineRenderer;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
         // We add menu panels to this object whenever we create a limb group.
         menuListNode = GetNode<Node>("UI/Menus/ScrollPanel/ParamList");
+        outlineRenderer = GetNode<OutlineBG>("OutlineBG");
 
         parameters = new Dictionary<string, LimbGroup>();
         // Note: int seedCount, float ts, float rMin, float rMax, float xMi, float xMa, float yMi, float yMa, float symm
@@ -104,15 +109,18 @@ public class SpriteGen : Node2D
 
         loadPaletteDialog = GetNode<FileDialog>("UI/Menus/PaletteLoadDialog");
 
-        presetDialog = GetNode<AcceptDialog>("UI/Menus/PresetDialog");
+        presetDialog = GetNode<WindowDialog>("UI/Menus/PresetDialog");
         presetTextEdit = GetNode<TextEdit>("UI/Menus/PresetDialog/PresetText");
 	}
 
 	public override void _Draw() {
 		// Start big, then progressively go smaller. Or maybe not?
         int rowWidth = (int)Mathf.Sqrt(totalSprites);
+        shapes.Clear();
+        outlineRenderer.points.Clear();
         // Generate each limb group for each individual sprite, then generate the next group, then the next one, then the next one.
         for(int k = 0; k < totalSprites; k++) {
+            
             random.Seed = colorSeeds[k];
             // TODO: make it so the amount of colors can be modified during runtime.
             palette = new Color[totalColors]; // Stores each of the colors that the generated sprite can use.
@@ -132,6 +140,8 @@ public class SpriteGen : Node2D
                 }
             }
         }
+
+        outlineRenderer.Update();
 	}
 
     /// <summary>
@@ -230,6 +240,17 @@ public class SpriteGen : Node2D
         
     }
 
+    public async void ExportPng() {
+        await ToSignal(GetTree(), "idle_frame");
+        await ToSignal(GetTree(), "idle_frame");
+        Rect2 rectangle = new Rect2(8, 8, (128 * 4) + (16 * 4),(128 * 4) + (16 * 4));
+        var img = GetViewport().GetTexture().GetData();
+        img.FlipY();
+        img = img.GetRect(rectangle);
+        var buf = img.SavePngToBuffer();
+        JavaScript.DownloadBuffer(buf, "render.png");
+    }
+
     public void SetBackgroundColor(Color newColor) {
         VisualServer.SetDefaultClearColor(newColor);
     }
@@ -288,19 +309,34 @@ public class SpriteGen : Node2D
             points[i].y = Mathf.Clamp(points[i].y, verticalCenter - 64f, verticalCenter + 64f);
             sidePoints[i].y = points[i].y;
 
+            //shapes.Add(points);
+
 			// Now make the mirrored version of this shape.
             if(isSymmetrical) {
                 mirrorPoints[i].x = mirrorCenter + ((points[i].x - mirrorCenter) * -1 );
                 mirrorPoints[i].y = points[i].y; 
+                //shapes.Add(mirrorPoints);
             }
+            
             //GD.Print(points[i].x + " | " + points[i].y);
         }
 
         Color[] colors = new Color[] { color };
-
+        Color[] black = new Color[] { new Color(0, 0, 0) };
+        if(Geometry.OffsetPolygon2d(points, outlineOffset).Count != 0){
+            Vector2[] outline = (Vector2[])(Geometry.OffsetPolygon2d(points, outlineOffset)[0]);
+            outlineRenderer.points.Add(outline);
+        }
         DrawPolygon(points, colors);
-        if(isSymmetrical)
+        
+        if(isSymmetrical) {
 		    DrawPolygon(mirrorPoints, colors);
+
+            if(Geometry.OffsetPolygon2d(points, outlineOffset).Count != 0){
+                Vector2[] mirrorOutline = (Vector2[])(Geometry.OffsetPolygon2d(mirrorPoints, outlineOffset)[0]);
+                outlineRenderer.points.Add(mirrorOutline);
+            }
+        }
         //DrawPolygon(sidePoints, colors);
         // Rect2 position = new Rect2(new Vector2(8, 0), new Vector2(8, 16));
         // Rect2 sourcePosition = new Rect2(Vector2.Zero, new Vector2(8, 16));
@@ -331,6 +367,11 @@ public class SpriteGen : Node2D
     /// <param name="newValue">The new total amount of colors.</param>
     public void ChangeColorCount(float newValue) {
         totalColors = (int) newValue;
+        Update();
+    }
+
+    public void ChangeOutlineSize(float newValue) {
+        outlineOffset = newValue;
         Update();
     }
 
